@@ -5,6 +5,7 @@ from PIL import Image
 def raiseFrame(frame):
     frame.tkraise()
 
+# opens the file and gets the file name used for the image
 def openFile():
     global file
     file = askopenfile(mode = 'r')
@@ -12,10 +13,15 @@ def openFile():
     if file is not None:
         pass
 
+# converts the image to ascii characters and displays
 def convertFile():
+    # create another window
     window = Toplevel()
     window.config(bg = BG)
+    
+    # error handling
     errorLabel = Label(window, font = ("Courier", 20), bg = BG, fg = FG)
+    # checks if input is an integer
     try:
         artW = int(currentWidth.get())
         fontSize = int(currentFontSize.get())
@@ -23,39 +29,46 @@ def convertFile():
         errorLabel.config(text = "Invalid value for width/font size!")
         errorLabel.grid(row = 0, column = 0, padx = 3, pady = 3)
         return
+    # checks if file is given
     if file == "":
         errorLabel.config(text = "No file given!")
         errorLabel.grid(row = 0, column = 0, padx = 3, pady = 3)
         return
-    density = " .:-=+*#%@"
-    if inverted.get():
-        density = density[::-1]
-    img = file
+    # checks if file is image
     try:
-        im = Image.open(img).convert("RGB")
+        img = Image.open(file).convert("RGB")
     except:
         errorLabel.config(text = "Can't process file type!")
         errorLabel.grid(row = 0, column = 0, padx = 3, pady = 3)
         return
-    w,h = im.size
+        
+    density = " .:-=+*#%@"
+    if inverted.get():
+        density = density[::-1]
+    w,h = img.size
     artH = int(((artW / w) * h) * .5)
-    im = im.resize((artW, artH))
-
+    img = img.resize((artW, artH))
+    
+    # creates art string by going through each pixel
     art = "```\n"
     for y in range(0, artH):
         for x in range(0, artW):
-            r,g,b = im.getpixel((x, y))
+            r,g,b = img.getpixel((x, y))
+            # get subjective brightness and map to density value
             brightness = (.21 * r + .72 * g + .07 * b)
             art += density[int(brightness // (255 / len(density)))]
         art += "\n"
     art += "```"
     
+    # copy art to clipboard
     root.clipboard_clear()
     root.clipboard_append(art)
+    # display art
     artLabel = Label(window, text = art[3:len(art) - 3], font = ("Courier", fontSize), bg = BG, fg = FG)
     artLabel.grid(row = 0, column = 0, padx = 10, pady = 10)
     
 file = ""  
+# create GUI
 BG = "#232429"
 FG = "white"
 root = Tk()
